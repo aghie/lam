@@ -1,0 +1,171 @@
+import numpy as np
+
+_lexfilepath_ = "/home/david/Escritorio/Papers/AtAston/subjectivity_clues_hltemnlp05/subjectivity_clues_hltemnlp05/subjclueslen1-HLTEMNLP05.tff"
+
+_prior_view_map_ = {
+  "positive" : 0,
+  "negative" : 1
+}
+
+_hyperasym_ = 0.1 # hyper for viewpoint of interest
+_hypersym_ = 0.01 # hyper for other viewpoints
+
+_lexicon_ = {}
+
+def getlexicon():
+  # build and return dict object for lexicon
+  # dict values : pos tag, type, prior
+  lex = {}
+  with open(_lexfilepath_, "r") as f:
+    for line in f:
+      # split the line and get the words after =
+      t, l, word, pos, stem, prior = [w.split("=")[1] for w in line.split()]
+      try:
+        if (word not in lex) or (lex[word]["pos"] == "noun" and pos != "noun"):
+          lex[word] = {
+            "pos" :  pos,
+            "type" :  t,
+            "prior" : prior
+          }
+      except Exception as e:
+        print(e)
+        pass
+  return lex
+      
+
+def calculateIntersect(vocab, lexicon):
+  # calculate the intersection between vocab and lexicon
+  return len(vocab.intersection(set(lexicon.keys())))
+
+def initModelPriors(model):
+
+  # TODO can distirbutions just become a list and looped with try/except?
+  # re-initalise a given latent varibale model and re-assign viewpoint words based on subjective lexicon
+
+  lexicon = getlexicon()
+  # reset the viewpoint-word assignments and counts
+  model.word_view_topic[:] = 0
+  try:
+    model.view_count[:] = 0
+  except Exception as e:
+    print(["Model does not contain view_count distribution", e])
+    pass
+  try:
+    model.doc_view[:] = 0
+  except Exception as e:
+    print(["Model does not contain doc_view distribution", e])
+    pass
+  try:
+    # try if model has word_view distribution
+    model.word_view[:] = 0
+  except Exception as e:
+    print(["Model does not contain view_word distribution", e])
+    pass
+  try:
+    # try update topic_view if it exists
+    model.topic_view[:] = 0
+  except Exception as e:
+    print(["Model does not contain topic_view distribution", e])
+    pass
+
+  # re-iterate through the documents
+  # if word is viewpoint word
+  #   if word is in lexicon
+  #     assign to viewpoint 0 if positive 
+  #     assign to viewpoint 1 if negative 
+  #     assign to random if neutral
+  #   else
+  #     assign to random
+  # for every viewpoint-word
+  #   if viewpoint_0 > viewpoint_1
+  #     assign viewpoint_0 0.01
+  #     assign viewpoint_1 0.1
+  #   if viewpoint_0 < viewpoint_1
+  #     assign viewpoint_0 0.1
+  #     assign viewpoint_1 0.01
+  #   if equal
+  #     assign both 0.1
+  for doc_id in range(model.n_doc):
+    for idx in range(model.max_doc_len):
+      vocab_id = model.doc_word_pos[doc_id, idx]
+      # get the topic of word
+      try:
+        topic_id = model.doc_view_topic_pos[doc_id, idx]
+      except:
+        topic_id = model.doc_topic_pos[doc_id, idx]
+      view_id = model.doc_view_pos[doc_id, idx]
+      if view_id != -1:
+        if model.vocab[vocab_id] in lexicon:
+          # we have a viewpoint word
+          subj = lexicon[model.vocab[vocab_id]]["prior"].lower()
+          if subj in _prior_view_map_:
+            # pick view_id based on prior
+            new_view_id = _prior_view_map_[subj]
+          else:
+            # pick random view_id
+            new_view_id = np.random.choice(range(model.n_view))
+        else:
+          new_view_id = np.random.choice(range(model.n_view))
+        # assign doc_pos for view 
+        model.doc_view_pos[doc_id, idx] = new_view_id
+        # increase doc_view count
+        model.word_view_topic[vocab_id, new_view_id, topic_id] += 1
+        try:
+          model.view_count[new_view_id] += 1
+        except:
+          pass
+        try:
+          model.doc_view[doc_id] += 1
+        except:
+          pass
+        try:
+          model.word_view[vocab_id, new_view_id] += 1
+        except:
+          pass
+        try:
+          model.topic_view[topic_id, new_view_id] += 1
+        except:
+          pass
+
+  for word_id in range(model.word_view_topic.shape[0]):
+    viewpoint_sums = np.array([np.sum(model.word_view_topic[word_id,v,:]) for v in range(model.word_view_topic.shape[1])])
+    if np.all(viewpoint_sums == 0):
+      # assign symmetric priors
+      model.gammas[word_id,:,:] = _hypersym_
+    else:
+      # assign asymmetric priors
+      max_view = np.argmax(viewpoint_sums)
+      model.gammas[word_id, :, :] = _hypersym_
+      model.gammas[word_id, max_view, :] = _hyperasym_
+
+def prior_function(word):
+  global _lexicon_
+  #D If the lexicon is empty we get the lexicon of the of the subjective words?
+  if _lexicon_ == {}:
+    _lexicon_ = getlexicon()
+  if word in _lexicon_:
+    # we have a viewpoint word
+    subj = _lexicon_[word]["prior"].lower()
+    #D We need to assign a valid _prior_view_map?
+    if subj in _prior_view_map_:
+      # pick view_id based on prior
+      new_view_id = _prior_view_map_[subj]
+    else:
+      # pick random view_id
+      new_view_id = np.random.choice(range(len(_prior_view_map_.keys())))
+  #D We need to assign a viewpoint to a word that it isn't in the lexicon?
+  else:
+    new_view_id = np.random.choice(range(len(_prior_view_map_.keys())))
+  print (_prior_view_map_.keys(), len(_prior_view_map_.keys()))
+  print (word,word in _lexicon_,new_view_id, _hyperasym_)
+  return new_view_id, _hyperasym_
+
+def viewpointword_rule(word, pos_tag):
+  global _lexicon_
+  if _lexicon_ == {}:
+    _lexicon_ = getlexicon()
+  # Return true if word appears int the lexicon
+  # Return false if otherwise
+  if word in _lexicon_:
+    return True
+  return False

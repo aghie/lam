@@ -1,0 +1,14 @@
+path_docs: hcd.tsv
+path_subjectivity_priors: ./data/mpqa_subjectivity_priors.txt
+path_output: /tmp/
+epochs: 1
+n_topics: [10,20]
+n_viewpoints: [2]
+x: lex_pos
+sentence_extraction: discriminative
+running_method: topics_first
+high_viewpoint_high_topic: true
+remove_ambigous_viewpoint_sentences: true
+path_palmetto_pyscript: ./eval/palmetto.py
+path_palmetto_jar: ./palmetto-0.1.0-jar-with-dependencies.jar
+path_wikipedia_dump: ./Wikipedia_bd/wikipedia_bd

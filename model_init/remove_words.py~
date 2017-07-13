@@ -1,0 +1,57 @@
+"""
+Collection of functions for generating data to be used in preprocessing
+"""
+
+def _generateCounts_(data):
+  counts = {}
+  for user, docs in data.items():
+    for doc in docs:
+      for word in doc.lower().split():
+        try:
+          counts[word] += 1
+        except:
+          counts[word] = 1
+  return counts
+
+def stopwordsPercent(data, top_cull_p = 5, bottom_cull_p = 25):
+  """
+  Generate a list of stopwords based on the top/bottom p percent of words in data 
+  """
+  print("Removing stopwords based on percentage of freqeuncy\n top_%: "+ str(top_cull_p) +"\n bottom_%:" + str(bottom_cull_p))
+  print("Data",data)
+  counts = _generateCounts_(data)
+  # convert dict to tuple list for sorting
+  counts = [(w,c) for w,c in counts.items()]
+  # sort into accending order
+  sorted_counts = sorted(counts, key = lambda tup: tup[1])
+  top_cull = int(len(sorted_counts) / 100.0) * top_cull_p
+  bottom_cull = int(len(sorted_counts) / 100.0) * bottom_cull_p
+  stopwords = [w for w,c in sorted_counts[-top_cull:]]
+  stopwords += [w for w,c in sorted_counts[:bottom_cull]]
+  return stopwords
+
+def stopwordsCount(data, max_count = 300, min_count = 1):
+  """
+  Generate a list of stopwords based on the number of occurences of each word 
+  """
+  print("Removing stopwords based on frequency\n min: "+ str(min_count) +"\n max:" + str(max_count))
+  counts = _generateCounts_(data)
+  counts = [(w,c) for w,c in counts.items()]
+  stopwords = [w for w, c in counts if c <= min_count or c >= max_count]
+  return stopwords
+
+def stopwordDocCount(data, max_count = 30, min_count = 0):
+  print("Removing stopwords based on document frequency\n min: "+ str(min_count) +"\n max:" + str(max_count))
+  counts = {}
+  for user, docs in data.items():
+    for doc in docs:
+      seen_words = set()
+      for word in doc.split():
+        if word not in seen_words:
+          try:
+            counts[word] += 1
+          except:
+            counts[word] = 1
+          seen_words.add(word)
+  stopwords = [k for k,v in counts.items() if v >= max_count or v <= min_count]
+  return stopwords
