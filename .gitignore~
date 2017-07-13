@@ -1,4 +1,3 @@
 resources/*
 *.pyc
 *.py~
-*.yml~

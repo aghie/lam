@@ -1,7 +1,7 @@
 path_docs: hcd.tsv
 path_subjectivity_priors: ./data/mpqa_subjectivity_priors.txt
 path_output: /tmp/
-epochs: 1
+epochs: 1000
 n_topics: [10,20]
 n_viewpoints: [2]
 x: lex_pos
