@@ -7,13 +7,27 @@ Python 3
 
 Numpy
 
+Scipy
+
 NLTK
+
+Pyyaml
 
 [stop-words](https://pypi.python.org/pypi/stop-words)
 
 [Palmetto](http://139.18.2.164/mroeder/palmetto/palmetto-0.1.0-jar-with-dependencies.jar)
 
 [Wikipedia_db](http://139.18.2.164/mroeder/palmetto/Wikipedia_bd.zip)
+
+## Prepare a virtual environment
+
+To avoid problems with previous version of software already installed in your system, create a [virtualenv](https://virtualenv.pypa.io/en/stable/) is a good option:
+
+	mkdir $HOME/env
+	virtualenv -p python3 $HOME/env/LAMenv
+	source $HOME/env/LAMenv/bin/activate
+	pip install nltk numpy scipy stop_words pyyaml
+  
 
 # Structure
 
@@ -59,8 +73,16 @@ NLTK
     PATH_WIKIPEDIA_DUMP: Download from http://139.18.2.164/mroeder/palmetto/Wikipedia_bd.zip
 
 # Execution
+        
+	cd lam-master
+	python explore_lam.py configuration.yml
 
-python explore_lam.py configuration.yml
+If you have created a virtualenv to run LAM, do not forget to first activate it:
+
+	cd lam-master
+	source $HOME/env/LAMenv/bin/activate
+	python explore_lam.py configuration.yml
+
 
 # Reference
 
