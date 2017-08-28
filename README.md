@@ -1,4 +1,4 @@
-# lam
+# LAM
 Latent Argument Model
 
 # Requirements
@@ -21,7 +21,7 @@ Pyyaml
 
 ## Prepare a virtual environment
 
-To avoid problems with previous version of software already installed in your system, create a [virtualenv](https://virtualenv.pypa.io/en/stable/) is a good option:
+To avoid problems with previous versions of software already installed in your system, create a [virtualenv](https://virtualenv.pypa.io/en/stable/) is a good option:
 
 	mkdir $HOME/env
 	virtualenv -p python3 $HOME/env/LAMenv
