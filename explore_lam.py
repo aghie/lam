@@ -78,14 +78,15 @@ def get_docs(filepath):
     with open(filepath, "r") as f:
         for line in f:
             if line[0] != "#":
-                line_split = line.split()
+                line_split = line.strip('\n').split('\t')
                 try:
                     if len(line_split) > 1 :
-                        docs.append(line_split[1:])
+                        docs.append(line_split[4].split())
                         doc_id_map[line_split[0]] = doc_id
                         doc_id += 1
                 except:
                     pass
+
     return doc_id_map,docs
 
 
@@ -192,7 +193,6 @@ if __name__ == "__main__":
                  line_split = line.strip('\n').split('\t')
                  try:
                      if len(line_split) > 1 :
-                         print (len(line_split), line_split)
                          new_docs[line_split[0]] = line_split[-1]
                          docs.append(line_split[-1])
                          doc_id_map[line_split[0]] = doc_id
@@ -210,7 +210,6 @@ if __name__ == "__main__":
                          switch_strategy = switch_strategy,
                          type_sentence_extraction= type_sentence_extraction,
                          running_method = running_method,
-                  #       word_assignment=word_assignment,
                          high_viewpoint_high_topic=high_viewpoint_high_topic,
                          argument_lexica = argument_lexica,
                          remove_ambiguous_viewpoint_sentences= remove_ambiguous_viewpoint_sentences)
@@ -219,8 +218,7 @@ if __name__ == "__main__":
     
              sentences_original, sentences_cleaned, dict_sentence_to_procdocindex = get_sentences(path_docs, model.subjective_dict_priors)
              
-            
-
+             
              model.run(epochs=epochs,
                        sentences_original=sentences_original,
                        sentences_cleaned=sentences_cleaned, 
@@ -248,9 +246,7 @@ if __name__ == "__main__":
              sentences_original,sentences_cleaned, dict_sentence_to_procodocindex =get_sentences(path_docs, 
                                                                                                  model.subjective_dict_priors)
              
-             print ("sentences_original", sentences_original)
-             print ("sentences_cleaned", sentences_cleaned)
-#               
+         
              top_sentences = model.print_viewpoint_top_sentence(sentences_cleaned,
                                                                sentences_original,
                                                                dict_sentence_to_procdocindex,
@@ -261,7 +257,7 @@ if __name__ == "__main__":
              
              path_out_best_sentences = dest_dir+os.sep+name_output+".topic_representatite_sentences"                                                 
                         
-#              
+         
              sentences_original,sentences_cleaned, dict_sentence_to_procodocindex =get_sentences(path_docs,
                                                                                                  model.subjective_dict_priors)
              
