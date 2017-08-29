@@ -83,6 +83,9 @@ If you have created a virtualenv to run LAM, do not forget to first activate it:
 	source $HOME/env/LAMenv/bin/activate
 	python explore_lam.py configuration.yml
 
+# Contact
+
+For questions, usage issues, bugs, etc, please contact: david.vilares@udc.es
 
 # Reference
 
